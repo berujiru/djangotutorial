@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # The Database Service
+  db:
+    image: mariadb:10.6
+    # Use environment variables to configure the database
+    environment:
+      MYSQL_ROOT_PASSWORD: mysecretpassword # Use a secure password in production!
+      MYSQL_DATABASE: django_db
+      MYSQL_USER: django_user
+      MYSQL_PASSWORD: django_password
+    # Persistent storage for database data
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    # Only expose port for web container access (not to your host machine)
+    # ports:
+    #   - "3306:3306"
+
+  # The Web Application Service (Django)
+  web:
+    build: . # Look for the Dockerfile in the current directory
+    command: python manage.py runserver 0.0.0.0:8000
+    # Mount the current directory into the container for easy code editing
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8000:8000" # Expose Django port to your host machine
+    depends_on:
+      - db # Ensure the database starts before the web app
+    environment:
+      # These environment variables will be used by Django's settings.py
+      # The host name 'db' works because it's the name of the service above
+      DATABASE_HOST: db
+      DATABASE_NAME: django_db
+      DATABASE_USER: django_user
+      DATABASE_PASSWORD: django_password
+
+# Define the persistent volume
+volumes:
+  mariadb_data:
