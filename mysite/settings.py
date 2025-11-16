@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import socket
+# The django.conf.settings import is removed/commented out here 
+# because we are defining settings in this file.
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,6 +36,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'polls.apps.PollsConfig',
+    'debug_toolbar', # Check
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,6 +46,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,12 +83,12 @@ DATABASES = {
     'default': {
         # 'ENGINE': 'django.db.backends.sqlite3',
         "ENGINE": "django.db.backends.mysql",
-        'NAME': os.environ.get('DATABASE_NAME'),  # ⬅️ 1. The name of your existing MySQL database
-        'USER': os.environ.get('DATABASE_USER'),       # ⬅️ 2. The username for MySQL
+        'NAME': os.environ.get('DATABASE_NAME'), 	 # ⬅️ 1. The name of your existing MySQL database
+        'USER': os.environ.get('DATABASE_USER'), 	 	 # ⬅️ 2. The username for MySQL
         'PASSWORD': os.environ.get('DATABASE_PASSWORD'), # ⬅️ 3. The password for the user
         'HOST': os.environ.get('DATABASE_HOST'),
-             # ⬅️ 4. The IP address of the MySQL server (usually localhost)
-        'PORT': '3306',          # ⬅️ 5. The port MySQL is running on (default is 3306)
+        # ⬅️ 4. The IP address of the MySQL server (usually localhost)
+        'PORT': '3306', 			# ⬅️ 5. The port MySQL is running on (default is 3306)
         
         # Optional: Set character encoding
         'OPTIONS': {
@@ -133,3 +139,36 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --- DEBUG TOOLBAR CONFIGURATION ---
+def show_toolbar(request):
+    if not DEBUG:
+        return False
+    xff = request.META.get("HTTP_X_FORWARDED_FOR")
+    remote_addr = xff.split(",")[0].strip() if xff else request.META.get("REMOTE_ADDR")
+    return remote_addr in INTERNAL_IPS
+
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK" : show_toolbar,
+}
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
+    "::1",
+]
+
+if DEBUG:
+    try:
+        hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+        INTERNAL_IPS += [ip[:-1] + "1" for ip in ips if ip and ip.count(".") == 3]
+        INTERNAL_IPS += [
+            "172.17.0.1",
+            "172.18.0.1",
+        ]
+    except Exception:
+        pass
+
+# settings.py
+import mimetypes
+mimetypes.add_type("application/javascript", ".js", True)
