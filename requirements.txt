@@ -1,4 +1,5 @@
 Django==5.2.8
 mysqlclient
 django-debug-toolbar
+django-rest-framework
 # Add any other Python dependencies here
