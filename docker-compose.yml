@@ -33,8 +33,8 @@ services:
       # The host name 'db' works because it's the name of the service above
       DATABASE_HOST: db
       DATABASE_NAME: django_db
-      DATABASE_USER: django_user
-      DATABASE_PASSWORD: django_password
+      DATABASE_USER: root
+      DATABASE_PASSWORD: mysecretpassword
 
 # Define the persistent volume
 volumes:
